@@ -26,14 +26,13 @@ function Page() {
 
     // Inputs required by backend but missing from original form (using defaults)
     // !! IMPORTANT: Add proper form inputs for these fields !!
-    const [otherSizingMethod, setOtherSizingMethod] = useState('3'); // Default backend code
+    const [otherSizingMethod, setOtherSizingMethod] = useState('2'); // Default backend code
     const [topManagementOpinion, setTopManagementOpinion] = useState('1'); // Default backend code (0/1)
-    const [devEnvAdequacy, setDevEnvAdequacy] = useState('3'); // Default backend code (needs scale)
+    const [devEnvAdequacy, setDevEnvAdequacy] = useState('1'); // Default backend code (needs scale)
     const [userResistance, setUserResistance] = useState('3'); // Default backend code (needs scale)
-    const [commentsCode, setCommentsCode] = useState('4'); // Default backend code (1-4)
-    const [orgMgmtClarity, setOrgMgmtClarity] = useState('1'); // Default backend code (1-3)
-    const [teamCohesion, setTeamCohesion] = useState('2'); // Default backend code (needs scale 1-5)
-
+    const [commentsCode, setCommentsCode] = useState('3'); // Default backend code (1-4)
+    const [orgMgmtClarity, setOrgMgmtClarity] = useState('2'); // Default backend code (1-3)
+    const [teamCohesion, setTeamCohesion] = useState('5'); // Default backend code (needs scale 1-5)
 
     // Cost parameters
     const [hourlyRate, setHourlyRate] = useState(''); // String for input, parsed to number
@@ -42,6 +41,9 @@ function Page() {
     const [techStack, setTechStack] = useState('MERN'); // String matching backend map key
     const [overheadCost, setOverheadCost] = useState(''); // String for input, parsed to number
     const [additionalCost, setAdditionalCost] = useState(''); // String for input, parsed to number
+
+    // New state for desired duration
+    const [desiredDuration, setDesiredDuration] = useState('');
 
     // Results and Errors
     const [apiResponse, setApiResponse] = useState(null);
@@ -73,6 +75,7 @@ function Page() {
         const parsedHourlyRate = parseFloat(hourlyRate || '0');
         const parsedOverhead = parseFloat(overheadCost || '0');
         const parsedAdditional = parseFloat(additionalCost || '0');
+        const parsedDesiredDuration = parseFloat(desiredDuration || '0');
 
         // --- Construct Payload with Correct Keys and Parsed/Mapped Values ---
         const payload = {
@@ -96,7 +99,7 @@ function Page() {
             "User resistance": parseInt(userResistance), // From default state - add input
             "Income satisfaction": parseInt(incomeSatisfaction),
             "Comments within the code": parseInt(commentsCode), // From default state - add input
-
+            "Actual duration": parsedDesiredDuration,
             // Cost Calculation Inputs
             "Juniors": numJuniors,
             "Mid": numMid,
@@ -107,6 +110,9 @@ function Page() {
             "Hourly Rate": parsedHourlyRate,
             "Overhead": parsedOverhead,
             "Additional costs": parsedAdditional
+
+            // Desired Duration
+            
         };
 
         // Log payload for debugging just before sending
@@ -167,152 +173,161 @@ function Page() {
                         <label>Dedicated Team Members (Count/Value):</label><br />
                         <input required type="number" min="0" value={dedicatedTeamMembers} onChange={(e) => setDedicatedTeamMembers(e.target.value)} placeholder="e.g. 8" style={{ width: '95%', padding: '5px' }}/>
                     </div>
-                 </fieldset>
+                   </fieldset>
 
-                 {/* --- Project Details --- */}
-                 <fieldset style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
-                    <legend>Project Details</legend>
-                    <div>
-                        <label>Object Points:</label><br />
-                        <input required type="number" min="0" value={objectPoints} onChange={(e) => setObjectPoints(e.target.value)} placeholder="e.g., 250" style={{ width: '95%', padding: '5px' }}/>
-                    </div>
-                     <div>
-                        <label>Number of Languages:</label><br />
-                        <input required type="number" min="0" value={numberOfLanguages} onChange={(e) => setNumberOfLanguages(e.target.value)} placeholder="e.g., 1" style={{ width: '95%', padding: '5px' }}/>
-                    </div>
-                     {/* !! Add Input for 'Other sizing method' (Number) !! */}
-                     {/* !! Add Input for 'Development environment adequacy' (Number 1-?) !! */}
-                     {/* !! Add Input for 'Comments within the code' (Number 1-4) !! */}
-                     <div><i style={{color: 'gray'}}>(Inputs needed for Other Sizing Method, Dev Env Adequacy, Comments)</i></div>
-                 </fieldset>
+                    {/* --- Project Details --- */}
+                    <fieldset style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
+                        <legend>Project Details</legend>
+                        <div>
+                            <label>Object Points:</label><br />
+                            <input required type="number" min="0" value={objectPoints} onChange={(e) => setObjectPoints(e.target.value)} placeholder="e.g., 250" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        <div>
+                            <label>Number of Languages:</label><br />
+                            <input required type="number" min="0" value={numberOfLanguages} onChange={(e) => setNumberOfLanguages(e.target.value)} placeholder="e.g., 1" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        {/* !! Add Input for 'Other sizing method' (Number) !! */}
+                        {/* !! Add Input for 'Development environment adequacy' (Number 1-?) !! */}
+                        {/* !! Add Input for 'Comments within the code' (Number 1-4) !! */}
+                        <div><i style={{color: 'gray'}}>(Inputs needed for Other Sizing Method, Dev Env Adequacy, Comments)</i></div>
+                    </fieldset>
 
-                 {/* --- Factor Ratings --- */}
-                 <fieldset style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
-                    <legend>Factor Ratings</legend>
-                    <div>
-                        <label>Development Type:</label><br />
-                        <select required value={developmentType} onChange={(e) => setDevelopmentType(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-                            <option value="1">New Software Development</option>
-                            <option value="2">Upgrading Existing Software</option>
-                            <option value="3">Modifying Existing Software</option>
-                            <option value="4">Customization of Imported Software</option>
-                        </select>
-                    </div>
-                     <div>
-                        <label>Application Domain:</label><br />
-                        <select required value={applicationDomain} onChange={(e) => setApplicationDomain(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-                            <option value="1">Banking System</option>
-                            <option value="2">ERP</option>
-                            <option value="3">Mobile Application</option>
-                            <option value="5">Financial and managerial</option>
-                            <option value="6">Web applications</option>
-                            <option value="7">Bespoke applications</option>
-                         </select>
-                    </div>
-                     <div>
-                        <label>Reliability Requirements:</label><br />
-                        <select required value={reliabilityRequirements} onChange={(e) => setReliabilityRequirements(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-                            <option value="1">User dissatisfaction/Inconvenience</option>
-                            <option value="2">Minor monetary loss, mitigatable</option>
-                            <option value="3">Medium monetary loss, mitigatable</option>
-                            <option value="4">Major monetary loss</option>
-                            <option value="5">Life threatening</option>
-                        </select>
-                    </div>
-                     <div>
-                         <label>Degree of Risk Management (1-5):</label><br />
-                         <input required type="number" min="1" max="5" value={riskManagement} onChange={(e) => setRiskManagement(e.target.value)} placeholder="1-5" style={{ width: '95%', padding: '5px' }}/>
-                     </div>
-                     <div>
-                         <label>Economic Instability Impact (1-5):</label><br />
-                         <input required type="number" min="1" max="5" value={economicInstability} onChange={(e) => setEconomicInstability(e.target.value)} placeholder="1-5" style={{ width: '95%', padding: '5px' }}/>
-                     </div>
-                     <div>
-                        <label>Income Satisfaction (1-5):</label><br />
-                        <select required value={incomeSatisfaction} onChange={(e) => setIncomeSatisfaction(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-                             <option value="1">Very Satisfied</option>
-                             <option value="2">Satisfied</option>
-                             <option value="3">Normal</option>
-                             <option value="4">Unsatisfied</option>
-                             <option value="5">Very Unsatisfied</option>
-                         </select>
-                    </div>
-                     <div>
-                         <label>Schedule Quality (1-4):</label><br />
-                         <input required type="number" min="1" max="4" value={scheduleQuality} onChange={(e) => setScheduleQuality(e.target.value)} placeholder="1-4" style={{ width: '95%', padding: '5px' }}/>
-                     </div>
-                     <div>
-                        <label>Software Tool Experience (1-5):</label><br />
-                        <input required type="number" min="1" max="5" value={toolExperience} onChange={(e) => setToolExperience(e.target.value)} placeholder="1-5" style={{ width: '95%', padding: '5px' }}/>
-                    </div>
-                    {/* !! Add Input for OrgMgmtClarity (1-3) !! */}
-                    {/* !! Add Input for TeamCohesion (1-5) !! */}
-                    {/* !! Add Input for TopMgmtOpinion (0/1) !! */}
-                    {/* !! Add Input for UserResistance (1-5?) !! */}
-                     <div><i style={{color: 'gray'}}>(Inputs needed for Org Clarity, Cohesion, Mgmt Opinion, User Resistance)</i></div>
-                  </fieldset>
+                    {/* --- Factor Ratings --- */}
+                    <fieldset style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
+                        <legend>Factor Ratings</legend>
+                        <div>
+                            <label>Development Type:</label><br />
+                            <select required value={developmentType} onChange={(e) => setDevelopmentType(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+                                <option value="1">New Software Development</option>
+                                <option value="2">Upgrading Existing Software</option>
+                                <option value="3">Modifying Existing Software</option>
+                                <option value="4">Customization of Imported Software</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Application Domain:</label><br />
+                            <select required value={applicationDomain} onChange={(e) => setApplicationDomain(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+                                <option value="1">Banking System</option>
+                                <option value="2">ERP</option>
+                                <option value="3">Mobile Application</option>
+                                <option value="5">Financial and managerial</option>
+                                <option value="6">Web applications</option>
+                                <option value="7">Bespoke applications</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Reliability Requirements:</label><br />
+                            <select required value={reliabilityRequirements} onChange={(e) => setReliabilityRequirements(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+                                <option value="1">User dissatisfaction/Inconvenience</option>
+                                <option value="2">Minor monetary loss, mitigatable</option>
+                                <option value="3">Medium monetary loss, mitigatable</option>
+                                <option value="4">Major monetary loss</option>
+                                <option value="5">Life threatening</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Degree of Risk Management (1-5):</label><br />
+                            <input required type="number" min="1" max="5" value={riskManagement} onChange={(e) => setRiskManagement(e.target.value)} placeholder="1-5" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        <div>
+                            <label>Economic Instability Impact (1-5):</label><br />
+                            <input required type="number" min="1" max="5" value={economicInstability} onChange={(e) => setEconomicInstability(e.target.value)} placeholder="1-5" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        <div>
+                            <label>Income Satisfaction (1-5):</label><br />
+                            <select required value={incomeSatisfaction} onChange={(e) => setIncomeSatisfaction(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+                                 <option value="1">Very Satisfied</option>
+                                 <option value="2">Satisfied</option>
+                                 <option value="3">Normal</option>
+                                 <option value="4">Unsatisfied</option>
+                                 <option value="5">Very Unsatisfied</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Schedule Quality (1-4):</label><br />
+                            <input required type="number" min="1" max="4" value={scheduleQuality} onChange={(e) => setScheduleQuality(e.target.value)} placeholder="1-4" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        <div>
+                            <label>Software Tool Experience (1-5):</label><br />
+                            <input required type="number" min="1" max="5" value={toolExperience} onChange={(e) => setToolExperience(e.target.value)} placeholder="1-5" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        {/* !! Add Input for OrgMgmtClarity (1-3) !! */}
+                        {/* !! Add Input for TeamCohesion (1-5) !! */}
+                        {/* !! Add Input for TopMgmtOpinion (0/1) !! */}
+                        {/* !! Add Input for UserResistance (1-5?) !! */}
+                        <div><i style={{color: 'gray'}}>(Inputs needed for Org Clarity, Cohesion, Mgmt Opinion, User Resistance)</i></div>
+                    </fieldset>
 
-                 {/* --- Cost Parameters --- */}
-                 <fieldset style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
-                     <legend>Cost Parameters</legend>
-                     <div>
-                         <label>Hourly Rate (USD):</label><br />
-                         <input required type="number" min="0" step="0.01" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} placeholder="e.g., 100" style={{ width: '95%', padding: '5px' }}/>
-                     </div>
-                     <div>
-                         <label>Location:</label><br />
-                         <select required value={location} onChange={(e) => setLocation(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-                             {/* Populate with keys from LOCATION_MAP */}
-                             <option value="India Tier 2">India Tier 2</option>
-                             <option value="India Tier 1">India Tier 1</option>
-                             <option value="Eastern Europe">Eastern Europe</option>
-                             <option value="Western Europe">Western Europe</option>
-                             <option value="US">US</option>
-                             <option value="Canada">Canada</option>
-                             <option value="Australia">Australia</option>
-                             <option value="Southeast Asia">Southeast Asia</option>
-                         </select>
-                     </div>
-                     <div>
-                         <label>Product Complexity:</label><br />
-                         <select required value={productComplexity} onChange={(e) => setProductComplexity(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-                              {/* Populate with keys from PRODUCT_COMPLEXITY_MAP */}
-                             <option value="Low">Low</option>
-                             <option value="Moderate">Moderate</option>
-                             <option value="High">High</option>
-                             <option value="Very High">Very High</option>
-                         </select>
-                     </div>
-                      <div>
-                         <label>Tech Stack:</label><br />
-                         <select required value={techStack} onChange={(e) => setTechStack(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-                              {/* Populate with keys from TECH_STACK_MAP */}
-                             <option value="MERN">MERN</option>
-                             <option value="MEAN">MEAN</option>
-                             <option value="Spring Boot">Spring Boot</option>
-                             <option value="Django">Django</option>
-                             <option value="Flutter">Flutter</option>
-                             <option value="Blockchain">Blockchain</option>
-                             <option value="React Native">React Native</option>
-                             <option value="ASP.NET">ASP.NET</option>
-                             <option value="Node">Node</option>
-                             <option value="Ruby on Rails">Ruby on Rails</option>
-                         </select>
-                     </div>
-                     <div>
-                         <label>Overhead Cost (USD):</label><br />
-                         <input required type="number" min="0" step="0.01" value={overheadCost} onChange={(e) => setOverheadCost(e.target.value)} placeholder="e.g., 5000" style={{ width: '95%', padding: '5px' }}/>
-                     </div>
-                     <div>
-                         <label>Additional Cost (USD):</label><br />
-                         <input required type="number" min="0" step="0.01" value={additionalCost} onChange={(e) => setAdditionalCost(e.target.value)} placeholder="e.g., 2500" style={{ width: '95%', padding: '5px' }}/>
-                     </div>
-                 </fieldset>
+                    {/* --- Cost Parameters --- */}
+                    <fieldset style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
+                        <legend>Cost Parameters</legend>
+                        <div>
+                            <label>Hourly Rate (USD):</label><br />
+                            <input required type="number" min="0" step="0.01" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} placeholder="e.g., 100" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        <div>
+                            <label>Location:</label><br />
+                            <select required value={location} onChange={(e) => setLocation(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+                                {/* Populate with keys from LOCATION_MAP */}
+                                <option value="India Tier 2">India Tier 2</option>
+                                <option value="India Tier 1">India Tier 1</option>
+                                <option value="Eastern Europe">Eastern Europe</option>
+                                <option value="Western Europe">Western Europe</option>
+                                <option value="US">US</option>
+                                <option value="Canada">Canada</option>
+                                <option value="Australia">Australia</option>
+                                <option value="Southeast Asia">Southeast Asia</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Product Complexity:</label><br />
+                            <select required value={productComplexity} onChange={(e) => setProductComplexity(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+                                 {/* Populate with keys from PRODUCT_COMPLEXITY_MAP */}
+                                <option value="Low">Low</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="High">High</option>
+                                <option value="Very High">Very High</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Tech Stack:</label><br />
+                            <select required value={techStack} onChange={(e) => setTechStack(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+                                 {/* Populate with keys from TECH_STACK_MAP */}
+                                <option value="MERN">MERN</option>
+                                <option value="MEAN">MEAN</option>
+                                <option value="Spring Boot">Spring Boot</option>
+                                <option value="Django">Django</option>
+                                <option value="Flutter">Flutter</option>
+                                <option value="Blockchain">Blockchain</option>
+                                <option value="React Native">React Native</option>
+                                <option value="ASP.NET">ASP.NET</option>
+                                <option value="Node">Node</option>
+                                <option value="Ruby on Rails">Ruby on Rails</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Overhead Cost (USD):</label><br />
+                            <input required type="number" min="0" step="0.01" value={overheadCost} onChange={(e) => setOverheadCost(e.target.value)} placeholder="e.g., 5000" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                        <div>
+                            <label>Additional Cost (USD):</label><br />
+                            <input required type="number" min="0" step="0.01" value={additionalCost} onChange={(e) => setAdditionalCost(e.target.value)} placeholder="e.g., 2500" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                    </fieldset>
 
-                {/* Submit Button */}
-                <button type="submit" style={{ gridColumn: '1 / -1', padding: '12px', fontSize: '1.1em', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>
-                    Estimate Cost
-                </button>
+                    {/* --- Desired Duration Input --- */}
+                    <fieldset style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
+                        <legend>Timeline</legend>
+                        <div>
+                            <label>Desired Duration (Months):</label><br />
+                            <input required type="number" min={1} step="1" max={24} value={desiredDuration} onChange={(e) => setDesiredDuration(e.target.value)} placeholder="e.g., 6" style={{ width: '95%', padding: '5px' }}/>
+                        </div>
+                    </fieldset>
+
+                    {/* Submit Button */}
+                    <button type="submit" style={{ gridColumn: '1 / -1', padding: '12px', fontSize: '1.1em', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>
+                        Estimate Cost
+                    </button>
             </form>
 
             {/* --- Display Formatted Results --- */}
@@ -322,24 +337,9 @@ function Page() {
                 <div style={{ marginTop: '2rem', padding: '1rem', border: '1px solid green', borderRadius: '5px' }}>
                     <h3>Estimation Results:</h3>
                     <p>
-                        <strong>Predicted Duration:</strong>
-                        {/* Use toFixed for consistent decimal places */}
-                        {` ${Number(apiResponse.predicted_duration_months).toFixed(2)} months`}
-                    </p>
-                    <p>
                         <strong>Predicted Base Effort:</strong>
                          {/* Use toLocaleString for commas, toFixed for decimals */}
                         {` ${Number(apiResponse.predicted_effort_hours).toLocaleString(undefined, { maximumFractionDigits: 2 })} hours`}
-                    </p>
-                    <p>
-                        <strong>Team Multiplier Applied:</strong>
-                        {/* Use toFixed for consistent decimal places */}
-                        {` ${Number(apiResponse.team_multiplier).toFixed(3)}`}
-                    </p>
-                    <p>
-                        <strong>Adjusted Effort:</strong>
-                         {/* Use toLocaleString for commas, toFixed for decimals */}
-                        {` ${Number(apiResponse.adjusted_effort_hours).toLocaleString(undefined, { maximumFractionDigits: 2 })} hours`}
                     </p>
                     <h4 style={{ marginTop: '1rem' }}>
                         Total Estimated Project Cost:

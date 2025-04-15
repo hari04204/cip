@@ -30,47 +30,47 @@ PRODUCT_COMPLEXITY_MAP = {
 try:
     # Use raw strings (r"...") or forward slashes for paths
     # IMPORTANT: Replace with your actual file paths
-    duration_model_path = r"C:\Users\reach\CODE\cipapp\backend\duration_model_tuned.pkl"
     effort_model_path = r"C:\Users\reach\CODE\cipapp\backend\xgboost.pkl"
-
-    print(f"Loading duration model from: {duration_model_path}")
-    with open(duration_model_path, "rb") as f:
-        duration_model = pickle.load(f)
 
     print(f"Loading effort model from: {effort_model_path}")
     with open(effort_model_path, "rb") as f:
         effort_model = pickle.load(f)
 
-    print("Models loaded successfully.")
+    print("Effort model loaded successfully.")
 except FileNotFoundError as e:
-    print(f"FATAL ERROR loading model: {e}. Please check the file path.")
+    print(f"FATAL ERROR loading effort model: {e}. Please check the file path.")
     # In a real app, you might want to handle this more gracefully
     # For now, we exit if models can't be loaded.
     exit()
 except Exception as e:
-    print(f"FATAL ERROR: An unexpected error occurred during model loading: {e}")
+    print(f"FATAL ERROR: An unexpected error occurred during effort model loading: {e}")
     exit()
 
 # --- Define Trained Feature Order ---
-# **IMPORTANT**: These orders MUST exactly match how your models were trained
-
-# Based on your Flask snippet for duration_input
-duration_feature_order = [
-    'Team size', 'Dedicated team members', 'Degree of risk management',
-    'Economic instability impact', 'Reliability requirements', 'Schedule quality',
-    'Software tool experience', 'Organization management structure clarity',
-    'Team cohesion', 'Development type', 'Application domain'
-]
+# **IMPORTANT**: These orders MUST exactly match how your model was trained
 
 # Based on your second script's trained_features list for xgboost.pkl
 effort_feature_order = [
-    'Dedicated team members', 'Team size', 'Actual duration', 'Object points',
-    'Degree of risk management', 'Economic instability impact', 'Development type',
-    'Other sizing method', 'Application domain', 'Top management opinion of previous system',
-    'Development environment adequacy', '# Multiple programing languages ', # Note space and typo
-    'User resistance', 'Reliability requirements', 'Income satisfaction', 'Schedule quality',
-    'Software tool experience', 'Comments within the code',
-    'Organization management structure clarity', 'Team cohesion'
+    'Dedicated team members',
+    'Team size',
+    'Actual duration',  # Added the missing feature
+    'Object points',
+    'Degree of risk management',
+    'Economic instability impact',
+    'Development type',
+    'Other sizing method',
+    'Application domain',
+    'Top management opinion of previous system',
+    'Development environment adequacy',
+    '# Multiple programing languages ', # Trailing space removed
+    'User resistance',
+    'Reliability requirements',
+    'Income satisfaction',
+    'Schedule quality',
+    'Software tool experience',
+    'Comments within the code',
+    'Organization management structure clarity',
+    'Team cohesion'
 ]
 
 # --- API Endpoint ---
@@ -89,28 +89,26 @@ def estimate():
                 return jsonify({"error": "No input data provided"}), 400
             print("Received data:", data) # Log received data for debugging
 
-            # --- Prepare Input for Duration Model ---
-            if not all(key in data for key in duration_feature_order):
-                missing_keys = [key for key in duration_feature_order if key not in data]
-                print(f"Error: Missing keys for duration prediction: {missing_keys}") # Log error
-                return jsonify({"error": f"Missing keys for duration prediction: {missing_keys}"}), 400
-            duration_input = [data[key] for key in duration_feature_order]
-
-            # --- Predict Duration ---
-            print("Duration Input:", duration_input) # Log input
-            predicted_duration = duration_model.predict(np.array([duration_input]))[0]
-            predicted_duration = max(0, float(predicted_duration)) # Ensure non-negative float
-            print("Predicted Duration:", predicted_duration) # Log result
-
+            # --- Check for 'Actual duration' in the input ---
+            if 'Actual duration' not in data:
+                print("Error: 'Actual duration' is missing in the input data.") # Log error
+                return jsonify({"error": "'Actual duration' is missing in the input data."}), 400
+            try:
+                predicted_duration = float(data['Actual duration'])
+                if predicted_duration < 0:
+                    raise ValueError("'Actual duration' cannot be negative.")
+            except ValueError as e:
+                print(f"Error: Invalid value for 'Actual duration': {e}")
+                return jsonify({"error": f"Invalid value for 'Actual duration': {e}"}), 400
+            print("Provided Duration:", predicted_duration) # Log provided duration
 
             # --- Prepare Input for Effort Model ---
             effort_input_values = data.copy()
-            effort_input_values['Actual duration'] = predicted_duration # Use predicted duration
+            # We are now getting 'Actual duration' from the input, no need to add it
 
-            # Check required keys for effort model (all except 'Actual duration')
-            required_effort_keys_from_data = [f for f in effort_feature_order if f != 'Actual duration']
-            if not all(key in effort_input_values for key in required_effort_keys_from_data):
-                missing_keys = [key for key in required_effort_keys_from_data if key not in effort_input_values]
+            # Check required keys for effort model
+            if not all(key in effort_input_values for key in effort_feature_order):
+                missing_keys = [key for key in effort_feature_order if key not in effort_input_values]
                 print(f"Error: Missing keys for effort prediction: {missing_keys}") # Log error
                 return jsonify({"error": f"Missing keys for effort prediction: {missing_keys}"}), 400
 
@@ -173,16 +171,13 @@ def estimate():
             # --- Calculate Total Cost ---
             adjusted_effort = predicted_effort * team_multiplier
             total_cost = (adjusted_effort * cost_per_hour * tech_multiplier *
-                          location_multiplier * complexity_factor) + overhead_cost + additional_cost
+                            location_multiplier * complexity_factor) + overhead_cost + additional_cost
             print(f"Adjusted Effort: {adjusted_effort}, Total Cost: {total_cost}") # Log cost calculation
 
 
             # --- Return Results ---
             response_data = {
-                'predicted_duration_months': round(predicted_duration, 2),
                 'predicted_effort_hours': round(predicted_effort, 2),
-                'adjusted_effort_hours': round(adjusted_effort, 2),
-                'team_multiplier': round(team_multiplier, 3),
                 'total_project_cost': round(total_cost, 2)
             }
             print("Sending Response:", response_data) # Log response
